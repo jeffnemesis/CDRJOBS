@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<queries>
+ <aQuery>
+  <all-regions/>
+<supplyDemandQuery title="CDR by tech">
+            <axis1 name="technology">technology</axis1>
+            <axis2 name="Year">physical-output[@vintage]</axis2>
+            <xPath buildList="true" dataName="output" group="false" sumAll="false">*[@type='sector' and @name='CDR_regional']/
+					*[@type='subsector']/*[@type='technology' and not(@name='unsatisfied CDR demand')]/
+					*[@type='output']/physical-output/node()</xPath>
+            <comments>Excludes unsatisfied CDR demand</comments>
+        </supplyDemandQuery>
+		</aQuery>
+		</queries>
