@@ -15,7 +15,8 @@ calculate_cdr_jobs(
   create_plots = TRUE,
   job_metric = "max_Jobs",
   ncol = 2,
-  nrow = 2
+  nrow = NULL,
+  selected_years = NULL
 )
 }
 \description{

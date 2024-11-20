@@ -2,7 +2,16 @@
 #' @export
 calculate_cdr_jobs <- function(db_path, db_name, dat_file = NULL, scenario_list, region_list, output_path,
                                output_type = "csv", create_plots = TRUE, job_metric = "max_Jobs",
-                               ncol = 2, nrow = 2) {
+                               ncol = 2, nrow = NULL, selected_years = NULL) {
+
+  # Validate output_type
+  output_type <- match.arg(output_type, several.ok = TRUE)
+
+  # Validate output path
+  if (!dir.exists(output_path)) {
+    stop("The specified output_path does not exist.")
+  }
+
   # Load required libraries
   library(dplyr)
   library(tidyr)
@@ -78,8 +87,14 @@ calculate_cdr_jobs <- function(db_path, db_name, dat_file = NULL, scenario_list,
   CDR_Output <- CDR_Output %>%
     filter(scenario %in% scenario_list, region %in% region_list)
 
+  # Filter expanded job intensities to include only subtechnologies present in the model's output
+  valid_subtechnologies <- unique(CDR_Output$subsector)
+  expanded_job_intensities <- expanded_job_intensities %>%
+    filter(subtechnology %in% valid_subtechnologies)
+
   # Join with job intensities using subsector from CDR_Output and subtechnology from expanded_job_intensities
-  Job_data <- left_join(CDR_Output, expanded_job_intensities, by = c("subsector" = "subtechnology"))
+  Job_data <- left_join(CDR_Output, expanded_job_intensities, by = c("subsector" = "subtechnology")) %>%
+    filter(!is.na(main_technology)) # Exclude rows with NA main_technology after filtering
 
   # Debugging: Ensure Job_data has valid rows
   if (nrow(Job_data) == 0) stop("No matching data after joining subsector and subtechnology.")
@@ -133,16 +148,6 @@ calculate_cdr_jobs <- function(db_path, db_name, dat_file = NULL, scenario_list,
       output_path = output_path
     )
 
-    visualize_results(
-      data = Job_cum_tech_global,
-      type = "cum_tech_global",
-      job_metric = job_metric,
-      selected_scenarios = scenario_list,
-      selected_regions = NULL,
-      ncol = ncol,
-      nrow = nrow,
-      output_path = output_path
-    )
 
     visualize_results(
       data = Job_total_year,
@@ -155,16 +160,6 @@ calculate_cdr_jobs <- function(db_path, db_name, dat_file = NULL, scenario_list,
       output_path = output_path
     )
 
-    visualize_results(
-      data = Job_total_year_global,
-      type = "total_year_global",
-      job_metric = job_metric,
-      selected_scenarios = scenario_list,
-      selected_regions = NULL,
-      ncol = ncol,
-      nrow = nrow,
-      output_path = output_path
-    )
 
     visualize_results(
       data = Job_by_tech_year,
@@ -177,16 +172,6 @@ calculate_cdr_jobs <- function(db_path, db_name, dat_file = NULL, scenario_list,
       output_path = output_path
     )
 
-    visualize_results(
-      data = Job_by_tech_year_global,
-      type = "tech_year_global",
-      job_metric = job_metric,
-      selected_scenarios = scenario_list,
-      selected_regions = NULL,
-      ncol = ncol,
-      nrow = nrow,
-      output_path = output_path
-    )
 
     visualize_results(
       data = Job_cum_total,
@@ -199,16 +184,6 @@ calculate_cdr_jobs <- function(db_path, db_name, dat_file = NULL, scenario_list,
       output_path = output_path
     )
 
-    visualize_results(
-      data = Job_cum_total_global,
-      type = "cum_total_global",
-      job_metric = job_metric,
-      selected_scenarios = scenario_list,
-      selected_regions = NULL,
-      ncol = ncol,
-      nrow = nrow,
-      output_path = output_path
-    )
   }
 
   # Return results as a list
